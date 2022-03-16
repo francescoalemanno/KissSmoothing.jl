@@ -7,7 +7,7 @@ using Random
     for N in [100, 200, 400, 800]
         for α in [0.01, 0.05, 0.1]
             x = LinRange(0, 1, N)
-            y = x
+            y = identity.(x)
             n = randn(rng, length(x)) .* α
             yr = y .+ n
             ys, yn = denoise(yr)
