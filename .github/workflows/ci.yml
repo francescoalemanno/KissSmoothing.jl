@@ -11,11 +11,23 @@ jobs:
       matrix:
         version:
           - 1.5 # automatically expands to the latest stable 1.x release of Julia
-          - 1
+          - nightly
         os:
           - ubuntu-latest
         arch:
           - x64
+        #  - x86
+        include:
+          # test macOS and Windows with latest Julia only
+          - os: macOS-latest
+            arch: x64
+            version: 1
+          - os: windows-latest
+            arch: x64
+            version: 1
+          #- os: windows-latest
+          #  arch: x86
+          #  version: 1
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
