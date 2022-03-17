@@ -16,7 +16,24 @@ using Random
             @test c2 < c1
             s1 = sum(abs2,n)
             s2 = sum(abs2,yn)
-            @test s1*0.5 < s2 < s1*2
+            @test abs(log2(s2/s1)) < 1
         end
     end
+end
+
+@testset "Too few points" begin
+    rng = Random.MersenneTwister(1337)
+    O=[1.0,2.0,10.0]
+    S,N = denoise(O)
+    @test all(O.==S)
+    @test all(N.==0)
+    @test length(S) == 3
+    @test length(N) == 3
+end
+
+@testset "Infinite smoothing" begin
+    O=sign.(sin.(1:1000)).+1
+    S,N = denoise(O,factor=Inf)
+    @test all(S .≈ 1)
+    @test all(abs.(N) .≈ 1)
 end

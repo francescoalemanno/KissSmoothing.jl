@@ -2,7 +2,7 @@
 
 This package implements a smoothing procedure
 
-    denoise(V::Array; factor=1.0, rtol=1e-12, dims=N, verbose = false)
+    denoise(V::Array; factor=1.0, rtol=1e-12, dims=ndims(V), verbose = false)
 
 smooth data in `V` according to:
 
@@ -30,7 +30,7 @@ in particular `S + N` reconstructs the original data `V`.
 ```julia
 using KissSmoothing, Statistics, LinearAlgebra
 using PyPlot
-
+figure(figsize=(5,4))
 for (i,s) in enumerate(2 .^ LinRange(-1.5,1.5,4))
     # generating a simple sinusoidal signal
     X = LinRange(0,2pi,1000)
@@ -42,9 +42,12 @@ for (i,s) in enumerate(2 .^ LinRange(-1.5,1.5,4))
     S, N = denoise(raw_S)
 
     subplot(2,2,i)
-    plot(X,raw_S, color="gray",lw=0.8)
-    plot(X,Y,color="red")
-    plot(X,S,color="blue", ls ="dashed")
+    plot(X,raw_S, color="gray",lw=0.8, label="Y noisy")
+    plot(X,Y,color="red",label="Y true")
+    plot(X,S,color="blue", ls ="dashed",label="Y smoothed")
+    xlabel("X")
+    ylabel("Y")
+    i==1 && legend()
 end
 tight_layout()
 savefig("test.png")
@@ -53,22 +56,26 @@ savefig("test.png")
 
 ## Multidimensional example
 ```julia
-
 using KissSmoothing, Statistics, LinearAlgebra
 using PyPlot
-figure()
+figure(figsize=(5,4))
 for (i,s) in enumerate(2 .^ LinRange(-1.5,1.5,4))
-    # generating a simple sinusoidal signal
+    # generating a simple circle dataset
     X = LinRange(0,10pi,1000)
     Y = sin.(X) .+ randn(length(X))./7 .*s
     Z = cos.(X) .+ randn(length(X))./7 .*s
     M = [Y Z]
+    O = [sin.(X) cos.(X)]
     # using this package function to extract signal S and noise N
     S, N = denoise(M, dims=1)
 
     subplot(2,2,i)
-    scatter(M[:,1],M[:,2], color="gray",s=2)
-    plot(S[:,1],S[:,2], color="red",lw=1.5)
+    scatter(M[:,1],M[:,2], color="gray",s=2,label="noisy")
+    plot(S[:,1],S[:,2], color="red",lw=1.5,label="smoothed")
+    plot(O[:,1],O[:,2], color="blue",lw=1.0,label="true")
+    i==1 && legend()
+    xlabel("X")
+    ylabel("Y")
 end
 tight_layout()
 savefig("test_multi.png")
