@@ -48,7 +48,7 @@ function denoise(
     end
     iV = dct(V)
     stri = map(i -> ifelse(i == dims, lV, 1), 1:ndims(V))
-    X = reshape(abs2.(((1:lV) .- 1) ./ (lV - 1)), stri...)
+    X = map(abs2,reshape(LinRange(0.0,1.0,lV), stri...))
     d = factor * mean(abs, diff(V, dims = dims)) * (K1 / K2)
     σt = 0.5
     σd = 0.25
