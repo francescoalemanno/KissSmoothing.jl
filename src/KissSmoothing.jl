@@ -53,20 +53,20 @@ function denoise(
     σt = 0.5
     σd = 0.25
     f = zero(V)
-    for iter = 1:200
+    for iter = 1:60
         σ = sqrt(lV) * σt / (1 - σt)
         if !isfinite(σ)
             break
         end
         f .= idct(iV .* exp.(-X .* σ))
         c = mapreduce((x, y) -> abs(x - y), +, f, V) / length(V)
-        Δ = 1 - c / d
+        Δ = d - c
         σt += σd * sign(Δ)
         σd /= 2
         if verbose
             println(buf, iter, "  ", σ, "  ", Δ)
         end
-        if abs(Δ) < rtol
+        if abs(d-c) < rtol*d
             break
         end
     end

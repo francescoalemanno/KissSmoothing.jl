@@ -37,3 +37,9 @@ end
     @test all(S .≈ 1)
     @test all(abs.(N) .≈ 1)
 end
+
+@testset "Verbose" begin
+    O=sign.(sin.(1:1000)).+1
+    S,N = denoise(O, factor=0.0, verbose=true)
+    @test all(abs.(S.-O) .< 1e-10)
+end
