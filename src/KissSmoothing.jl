@@ -31,7 +31,7 @@ returns a tuple (S,N) where:
 in particular `S + N` reconstructs the original data `V`.
 """
 function denoise(
-    V::Array{Float64,N};
+    V::AbstractArray{Float64,N};
     factor::Float64 = 1.0,
     rtol::Float64 = 1e-12,
     dims::Int64 = N,
@@ -48,7 +48,7 @@ function denoise(
     end
     iV = dct(V)
     stri = map(i -> ifelse(i == dims, lV, 1), 1:ndims(V))
-    X = map(abs2,reshape(LinRange(0.0,1.0,lV), stri...))
+    X = map(abs2, reshape(LinRange(0.0, 1.0, lV), stri...))
     d = factor * mean(abs, diff(V, dims = dims)) * (K1 / K2)
     σt = 0.5
     σd = 0.25
@@ -66,7 +66,7 @@ function denoise(
         if verbose
             println(buf, iter, "  ", σ, "  ", Δ)
         end
-        if abs(d-c) < rtol*d
+        if abs(d - c) < rtol * d
             break
         end
     end
@@ -76,5 +76,59 @@ function denoise(
     f, V .- f
 end
 
-export denoise
+function tps(r)
+    if iszero(r)
+        zero(r)
+    else
+        r * r * log(r)
+    end
+end
+
+function dist(x, y)
+    mapreduce(+, x, y) do a, b
+        abs2(a - b)
+    end
+end
+
+struct RBF{G<:AbstractArray{Float64},C<:AbstractArray{Float64}}
+    Γ::G
+    C::C
+end
+
+function evalPhi(xs::AbstractArray{Float64}, cp::AbstractArray{Float64})
+    Phi = zeros(size(xs, 1), size(cp, 1) + 1)
+    for i = 1:size(xs, 1), j = 1:size(cp, 1)
+        Phi[i, j] = tps(dist(xs[i, :], cp[j, :]))
+    end
+    Phi[:, end] .= 1
+    Phi
+end
+
+function (net::RBF)(X::AbstractArray{Float64})
+    evalPhi(X, net.C) * net.Γ
+end
+
+
+"""
+    fit_rbf(xv::Array, yv::Array, cp::Array)
+
+fit thin-plate radial basis function according to:
+
+    `xv` : array NxP, N number of training points, P number of input variables
+
+    `yv` : array NxQ, N number of training points, Q number of output variables
+
+    `cp` : array KxP, K number of control points, P number of input variables
+
+returns a callable RBF object.
+"""
+function fit_rbf(
+    xv::AbstractArray{Float64},
+    yv::AbstractArray{Float64},
+    cp::AbstractArray{Float64},
+)
+    RBF(evalPhi(xv, cp) \ yv, collect(cp))
+end
+
+export denoise, fit_rbf, RBF
 end # module

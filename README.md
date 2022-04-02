@@ -1,6 +1,6 @@
 # KissSmoothing.jl
-
-This package implements a smoothing procedure
+This package implements a denoising procedure, and a Radial Basis Function estimation procedure
+## Denoising
 
     denoise(V::Array; factor=1.0, rtol=1e-12, dims=ndims(V), verbose = false)
 
@@ -25,7 +25,7 @@ returns a tuple (S,N) where:
 in particular `S + N` reconstructs the original data `V`.
 
 
-# Example
+### Example
 
 ```julia
 using KissSmoothing, Statistics, LinearAlgebra
@@ -54,7 +54,7 @@ savefig("test.png")
 ```
 ![test.png](test.png "Plot of 1D signal smoothing")
 
-## Multidimensional example
+### Multidimensional example
 ```julia
 using KissSmoothing, Statistics, LinearAlgebra
 using PyPlot
@@ -81,3 +81,36 @@ tight_layout()
 savefig("test_multi.png")
 ```
 ![test_multi.png](test_multi.png "Plot of multidim smoothing")
+
+## RBF Estimation
+
+    fit_rbf(xv::Array, yv::Array, cp::Array)
+
+fit thin-plate radial basis function according to:
+
+    `xv` : array NxP, N number of training points, P number of input variables
+
+    `yv` : array NxQ, N number of training points, Q number of output variables
+
+    `cp` : array KxP, K number of control points, P number of input variables
+
+returns a callable RBF object.
+
+### Example
+
+```julia
+using PyPlot
+t = LinRange(0,2pi,1000)
+ty = sin.(t)
+y = ty .+ randn(length(t)) .*0.05
+fn = fit_rbf(t,y,LinRange(0,2pi,20))
+scatter(t, y, color="gray",s=2,label="noisy")
+plot(t, fn(t), color="red",lw=1.5,label="rbf estimate")
+plot(t,ty, color="blue",lw=1.0,label="true")
+xlabel("X")
+ylabel("Y")
+legend()
+tight_layout()
+savefig("rbf.png")
+```
+![rbf.png](rbf.png "Plot of rbf estimation")
