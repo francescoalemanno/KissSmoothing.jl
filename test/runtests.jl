@@ -50,5 +50,5 @@ end
     fn = fit_rbf(t,y,LinRange(0,2pi,20))
     pred_y = fn(t)
     error = sqrt(sum(abs2, pred_y .- y)/length(t))
-    @test error < 0.0005
+    @test error < 0.0006
 end

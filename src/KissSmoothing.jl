@@ -85,9 +85,9 @@ function tps(r)
 end
 
 function dist(x, y)
-    mapreduce(+, x, y) do a, b
+    sqrt(mapreduce(+, x, y) do a, b
         abs2(a - b)
-    end
+    end)
 end
 
 struct RBF{G<:AbstractArray{Float64},C<:AbstractArray{Float64}}
