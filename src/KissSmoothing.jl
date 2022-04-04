@@ -75,19 +75,13 @@ function denoise(
     end
     f, V .- f
 end
+const ϵ::Float64 = nextfloat(0.0)
 
-function tps(r)
-    if iszero(r)
-        zero(r)
-    else
-        r * r * log(r)
-    end
-end
-
-function dist(x, y)
-    sqrt(mapreduce(+, x, y) do a, b
+function tps(x::AbstractArray{Float64},y::AbstractArray{Float64})
+    r = ϵ+mapreduce(+, x, y) do a, b
         abs2(a - b)
-    end)
+    end
+    r * log(r)
 end
 
 struct RBF{G<:AbstractArray{Float64},C<:AbstractArray{Float64}}
@@ -96,11 +90,20 @@ struct RBF{G<:AbstractArray{Float64},C<:AbstractArray{Float64}}
 end
 
 function evalPhi(xs::AbstractArray{Float64}, cp::AbstractArray{Float64})
-    Phi = zeros(size(xs, 1), size(cp, 1) + 1)
-    for i = 1:size(xs, 1), j = 1:size(cp, 1)
-        Phi[i, j] = tps(dist(xs[i, :], cp[j, :]))
+    Phi = zeros(size(xs, 1), size(cp, 1)+1)
+    for i = 1:size(xs, 1)
+        mu = 0.0
+        for j = 1:size(cp, 1)
+            k = tps(xs[i, :], cp[j, :])
+            Phi[i, j] = k
+            mu += k
+        end
+        mu /= size(cp, 1)
+        for j = 1:size(cp, 1)
+            Phi[i, j] -= mu
+        end
+        Phi[i, size(cp, 1)+1] = 1.0
     end
-    Phi[:, end] .= 1
     Phi
 end
 

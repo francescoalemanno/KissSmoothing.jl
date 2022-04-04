@@ -99,7 +99,7 @@ returns a callable RBF object.
 ### Example
 
 ```julia
-using PyPlot
+using PyPlot, KissSmoothing
 t = LinRange(0,2pi,1000)
 ty = sin.(t)
 y = ty .+ randn(length(t)) .*0.05

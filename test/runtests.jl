@@ -45,10 +45,12 @@ end
 end
 
 @testset "Fit 1D RBF" begin
-    t = LinRange(0,2pi,1000)
-    y = sin.(t)
-    fn = fit_rbf(t,y,LinRange(0,2pi,20))
-    pred_y = fn(t)
-    error = sqrt(sum(abs2, pred_y .- y)/length(t))
-    @test error < 0.0006
+    for μ in LinRange(-100,100,5)
+        t = LinRange(0,2pi,150)
+        y = sin.(t).+μ
+        fn = fit_rbf(t,y,LinRange(0,2pi,50))
+        pred_y = fn(t)
+        error = sqrt(sum(abs2, pred_y .- y)/length(t))
+        @test error < 0.0002
+    end
 end
