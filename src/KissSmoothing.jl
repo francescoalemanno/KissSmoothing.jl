@@ -75,9 +75,9 @@ function denoise(
     end
     f, V .- f
 end
-const ϵ::Float64 = nextfloat(0.0)
 
 function tps(x::AbstractArray{Float64},y::AbstractArray{Float64})
+    ϵ = nextfloat(0.0)
     r = ϵ+mapreduce(+, x, y) do a, b
         abs2(a - b)
     end
