@@ -196,5 +196,5 @@ function fit_nspline(
 end
 
 
-export denoise, fit_rbf, RBF, fin_nspline
+export denoise, fit_rbf, RBF, fit_nspline
 end # module
