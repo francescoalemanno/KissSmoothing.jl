@@ -132,6 +132,69 @@ function fit_rbf(
 )
     RBF(evalPhi(xv, cp) \ yv, collect(cp))
 end
+    
+    
+    
 
-export denoise, fit_rbf, RBF
+function basis_d(x, n1, nK)
+    x1p = max(x - n1, zero(x))
+    x2p = max(x - nK, zero(x))
+    return ((x1p)^3 - (x2p)^3) / (nK - n1)
+end
+
+function basis_N(x, xi, k::Int)
+    K = length(xi)
+    if k == K - 1
+        return one(x)
+    end
+    sx = (x - xi[1]) / (xi[end] - xi[1])
+    if k == K
+        return sx
+    end
+    if 1 <= k <= K - 2
+        nxi_k = (xi[k] - xi[1]) / (xi[end] - xi[1])
+        nxi_em1 = (xi[end-1] - xi[1]) / (xi[end] - xi[1])
+        return basis_d(sx, nxi_k, 1) - basis_d(sx, nxi_em1, xi[end])
+    end
+    return zero(x)
+end
+
+"""
+    fit_nspline(xv::Vector, yv::Vector, cp::Vector)
+
+fit natural cubic splines basis function according to:
+
+    `xv` : array N, N number of training points
+
+    `yv` : array N, N number of training points
+
+    `cp` : array K, K number of control points
+
+returns a callable function.
+"""
+function fit_nspline(
+    x::AbstractVector{Float64},
+    y::AbstractVector{Float64},
+    xi::AbstractVector{Float64},
+)
+    issorted(xi) || error("Knots \"xi\" must be sorted.")
+    N = length(x)
+    K = length(xi)
+    M = zeros(N, K)
+    scal = 1 / sqrt(N)
+    for i = 1:N, j = 1:K
+        M[i, j] = basis_N(x[i], xi, j) / scal
+    end
+    C = M \ (y ./ scal)
+    function fn(x)
+        s = zero(x)
+        for i in eachindex(C)
+            s += basis_N(x, xi, i) * C[i]
+        end
+        return s
+    end
+end
+
+
+export denoise, fit_rbf, RBF, fin_nspline
 end # module
