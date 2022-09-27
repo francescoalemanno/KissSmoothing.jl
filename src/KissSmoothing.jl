@@ -156,7 +156,7 @@ function basis_N(x, xi, k::Int)
         nxi_em1 = (xi[end-1] - xi[1]) / (xi[end] - xi[1])
         return basis_d(sx, nxi_k, 1) - basis_d(sx, nxi_em1, xi[end])
     end
-    return zero(x)
+    error("order must be between 1 and K = length(xi)")
 end
 
 """
