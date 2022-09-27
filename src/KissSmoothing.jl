@@ -144,6 +144,9 @@ end
 
 function basis_N(x, xi, k::Int)
     K = length(xi)
+    if k<1 || k>K
+        error("order must be between 1 and K = length(xi)")
+    end
     if k == K - 1
         return one(x)
     end
@@ -151,12 +154,9 @@ function basis_N(x, xi, k::Int)
     if k == K
         return sx
     end
-    if 1 <= k <= K - 2
-        nxi_k = (xi[k] - xi[1]) / (xi[end] - xi[1])
-        nxi_em1 = (xi[end-1] - xi[1]) / (xi[end] - xi[1])
-        return basis_d(sx, nxi_k, 1) - basis_d(sx, nxi_em1, xi[end])
-    end
-    error("order must be between 1 and K = length(xi)")
+    nxi_k = (xi[k] - xi[1]) / (xi[end] - xi[1])
+    nxi_em1 = (xi[end-1] - xi[1]) / (xi[end] - xi[1])
+    return basis_d(sx, nxi_k, 1) - basis_d(sx, nxi_em1, xi[end])
 end
 
 """

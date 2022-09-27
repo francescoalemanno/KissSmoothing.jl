@@ -64,4 +64,5 @@ end
         error = sqrt(sum(abs2, pred_y .- y)/length(t))
         @test error < 0.0002
     end
+    @test_throws ErrorException KissSmoothing.basis_N(Float64[],Float64[],1)
 end
