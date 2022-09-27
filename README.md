@@ -117,7 +117,7 @@ savefig("rbf.png")
 ![rbf.png](rbf.png "Plot of rbf estimation")
 
 
-## RBF Estimation
+## NSplines Estimation
 
     fit_nspline(xv::Vector, yv::Vector, cp::Vector)
 
