@@ -1,5 +1,6 @@
 # KissSmoothing.jl
-This package implements a denoising procedure, and a Radial Basis Function estimation procedure
+This package implements a denoising procedure, a Radial Basis Function estimation procedure and a Natural Cubic Splines estimation procedure.
+
 ## Denoising
 
     denoise(V::Array; factor=1.0, rtol=1e-12, dims=ndims(V), verbose = false)
@@ -114,3 +115,37 @@ tight_layout()
 savefig("rbf.png")
 ```
 ![rbf.png](rbf.png "Plot of rbf estimation")
+
+
+## RBF Estimation
+
+    fit_nspline(xv::Vector, yv::Vector, cp::Vector)
+
+fit natural cubic splines basis function according to:
+
+    `xv` : array N, N number of training points
+
+    `yv` : array N, N number of training points
+
+    `cp` : array K, K number of control points
+
+returns a callable function.
+
+### Example
+
+```julia
+using PyPlot, KissSmoothing
+t = LinRange(0,pi,1000)
+ty = sin.(t.^2)
+y = ty .+ randn(length(t)) .*0.05
+fn = fit_nspline(t,y,LinRange(0,2pi,20))
+scatter(t, y, color="gray",s=2,label="noisy")
+plot(t, fn.(t), color="red",lw=1.5,label="nspline estimate")
+plot(t,ty, color="blue",lw=1.0,label="true")
+xlabel("X")
+ylabel("Y")
+legend()
+tight_layout()
+savefig("nspline.png")
+```
+![nspline.png](nspline.png "Plot of NSpline estimation")
