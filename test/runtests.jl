@@ -54,3 +54,15 @@ end
         @test error < 0.0002
     end
 end
+
+@testset "Fit NSpline" begin
+    for μ in LinRange(-100,100,5)
+        t = LinRange(0,2pi,150)
+        y = sin.(t).+μ
+        fn = fit_nspline(t,y,LinRange(0,2pi,50))
+        pred_y = fn.(t)
+        error = sqrt(sum(abs2, pred_y .- y)/length(t))
+        @test error < 0.0002
+    end
+    @test_throws ErrorException KissSmoothing.basis_N(Float64[],Float64[],1)
+end
