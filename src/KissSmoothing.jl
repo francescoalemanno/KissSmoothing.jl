@@ -195,6 +195,30 @@ function fit_nspline(
     end
 end
 
-
-export denoise, fit_rbf, RBF, fit_nspline
+function fit_sine_series(X::AbstractVector{<:Real}, Y::AbstractVector{<:Real}, basis_elements::Integer, noise = 0.0)
+    lx, hx = extrema(X)
+    T = @. (X - lx)/(hx-lx)*pi
+    M = zeros(length(X),2+basis_elements)
+    for i in eachindex(X)
+        M[i, 1] = 1
+        M[i, 2] = T[i]
+        for k in 1:basis_elements
+            M[ i, 2+k] = sin(k*T[i])
+        end
+    end
+    C = M\Y
+    return function fn(x)
+        t = (x - lx)/(hx-lx)*pi
+        s = C[1]+C[2]*t
+        for k in 1:basis_elements
+            cn1 = C[2+k]
+            SN = abs2(cn1)
+            hn = max(1 - noise*noise/SN,0)
+            s += cn1*sin(k*t)*hn
+        end
+        s
+    end
+end
+    
+export denoise, fit_rbf, RBF, fit_nspline, fit_sine_series
 end # module
