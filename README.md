@@ -149,3 +149,38 @@ tight_layout()
 savefig("nspline.png")
 ```
 ![nspline.png](nspline.png "Plot of NSpline estimation")
+
+## Sine Series Estimation
+
+    fit_sine_series(X::Vector, Y::Vector, basis_elements::Integer, noise=0)
+
+fit Y ~ 1 + X + Σ sin(.) according to:
+
+    `X` : array N, N number of training points
+
+    `Y` : array N, N number of training points
+
+    `basis_elements` : number of sine terms
+    
+    `noise` : noise filtering according to Wiener method, default to 0 (off)
+
+returns a callable function.
+
+### Example
+
+```julia
+using PyPlot, KissSmoothing
+t = LinRange(0,pi,250)
+ty = sin.(t.^2) .+ t
+y = ty .+ randn(length(t)) .*0.05
+fn = fit_sine_series(t,y,20)
+scatter(t, y, color="gray",s=2,label="noisy")
+plot(t, fn.(t), color="red",lw=1.,label="sine fit")
+plot(t,ty, color="blue",lw=0.7,label="true")
+xlabel("X")
+ylabel("Y")
+legend()
+tight_layout()
+savefig("sine_fit.png")
+```
+![sine_fit.png](nspline.png "Plot of NSpline estimation")
