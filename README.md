@@ -183,4 +183,4 @@ legend()
 tight_layout()
 savefig("sine_fit.png")
 ```
-![sine_fit.png](nspline.png "Plot of NSpline estimation")
+![sine_fit.png](sine_fit.png "Plot of NSpline estimation")
