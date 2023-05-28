@@ -195,6 +195,21 @@ function fit_nspline(
     end
 end
 
+"""
+    fit_sine_series(X::Vector, Y::Vector, basis_elements::Integer, noise=0)
+
+fit Y ~ 1 + X + Σ sin(.) according to:
+
+    `X` : array N, N number of training points
+
+    `Y` : array N, N number of training points
+
+    `basis_elements` : number of sine terms
+    
+    `noise` : noise filtering according to Wiener method, default to 0 (off)
+
+returns a callable function.
+"""
 function fit_sine_series(X::AbstractVector{<:Real}, Y::AbstractVector{<:Real}, basis_elements::Integer, noise = 0.0)
     lx, hx = extrema(X)
     T = @. (X - lx)/(hx-lx)*pi
