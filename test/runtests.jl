@@ -60,7 +60,7 @@ end
     for μ in LinRange(-100,100,5)
         t = LinRange(0,2pi,150)
         y = sin.(t) .+ μ .* t
-        fn = fit_sine_series(t,y,50)
+        fn = fit_sine_series(t,y,50, order = 3, lambda = 0.00001)
         pred_y = fn.(t)
         error = sqrt(sum(abs2, pred_y .- y)/length(t))
         @test error < 0.0002

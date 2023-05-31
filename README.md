@@ -154,15 +154,19 @@ savefig("nspline.png")
 
     fit_sine_series(X::Vector, Y::Vector, basis_elements::Integer, noise=0)
 
-fit Y ~ 1 + X + Σ sin(.) according to:
+fit Y ~ 1 + X + Σ sin(.) by minimising Σ (Y - f(x))^2 + lambda * ∫(Δ^order F)^2
 
-    `X` : array N, N number of training points
+    `X` : array N, N number of training points.
 
-    `Y` : array N, N number of training points
+    `Y` : array N, N number of training points.
 
-    `basis_elements` : number of sine terms
+    `basis_elements` : number of sine terms.
     
-    `noise` : noise filtering according to Wiener method, default to 0 (off)
+    Keyword arguments:
+    
+    `lambda` : intensity of regularization.
+    
+    `order` : derivative to regularise.
 
 returns a callable function.
 
@@ -170,17 +174,20 @@ returns a callable function.
 
 ```julia
 using PyPlot, KissSmoothing
-t = LinRange(0,pi,250)
-ty = sin.(t.^2) .+ t
-y = ty .+ randn(length(t)) .*0.05
-fn = fit_sine_series(t,y,20)
-scatter(t, y, color="gray",s=2,label="noisy")
-plot(t, fn.(t), color="red",lw=1.,label="sine fit")
-plot(t,ty, color="blue",lw=0.7,label="true")
+fg(x) = sin(x^2) + x
+x = collect(LinRange(0,pi,250))
+xc = identity.(x)
+filter!(x->(x-1)^2>0.1, x)
+filter!(x->(x-2)^2>0.1, x)
+y = fg.(x) .+ randn(length(x)) .*0.05
+fn = fit_sine_seris(x,y,20, lambda = 0.00001)
+scatter(x, y, color="gray",s=2,label="noisy")
+plot(xc, fn.(xc), color="red",lw=1.,label="fit")
+plot(xc,fg.(xc), color="blue",lw=0.7,label="true")
 xlabel("X")
 ylabel("Y")
 legend()
 tight_layout()
 savefig("sine_fit.png")
 ```
-![sine_fit.png](sine_fit.png "Plot of NSpline estimation")
+![sine_fit.png](sine_fit.png "Plot of FFT Spline estimation")
