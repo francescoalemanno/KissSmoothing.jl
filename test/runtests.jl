@@ -3,7 +3,7 @@ using Test
 import Random
 
 @testset "Goodness of Smoothing" begin
-    rn0 = Random.Xoshiro(1337)
+    rn0 = Random.MersenneTwister(1337)
     for N in [100, 200, 400, 800]
         for α in [0.01, 0.05, 0.1]
             x = LinRange(0, 1, N)
@@ -80,7 +80,7 @@ end
 
 
 @testset "LSQ Denoise" begin
-    rn1 = Random.Xoshiro(1337)
+    rn1 = Random.MersenneTwister(1337)
     for μ in LinRange(-100,100,5)
         t = LinRange(0,2pi,150)
         y = sin.(t)
