@@ -6,6 +6,8 @@ exports a single function `denoise`, for further help look at it's docstring.
 module KissSmoothing
 using FFTW: dct, idct
 using Statistics: mean
+using LinearAlgebra: factorize, I
+using SparseArrays: sparse
 
 """
     denoise(V::Array; factor=1.0, rtol=1e-12, dims=ndims(V), verbose = false)
@@ -90,8 +92,8 @@ struct RBF{G<:AbstractArray{Float64},C<:AbstractArray{Float64}}
 end
 
 function evalPhi(xs::AbstractArray{Float64}, cp::AbstractArray{Float64})
-    Phi = zeros(size(xs, 1), size(cp, 1)+1)
-    for i = 1:size(xs, 1)
+    Phi = zeros(size(xs, 1), size(cp, 1)+1+size(xs,2))
+    @views for i = 1:size(xs, 1)
         mu = 0.0
         for j = 1:size(cp, 1)
             k = tps(xs[i, :], cp[j, :])
@@ -103,6 +105,9 @@ function evalPhi(xs::AbstractArray{Float64}, cp::AbstractArray{Float64})
             Phi[i, j] -= mu
         end
         Phi[i, size(cp, 1)+1] = 1.0
+        for j = 1:size(xs, 2)
+            Phi[i, size(cp, 1)+1+j] = xs[i,j]
+        end
     end
     Phi
 end
@@ -196,7 +201,7 @@ function fit_nspline(
 end
 
 """
-    fit_sine_series(X::Vector, Y::Vector, basis_elements::Integer, noise=0)
+    fit_sine_series(X::Vector,Y::Vector, basis_elements::Integer; lambda = 0.0, order=3)
 
 fit Y ~ 1 + X + Σ sin(.) by minimising Σ (Y - f(x))^2 + lambda * ∫(Δ^order F)^2
 
@@ -222,7 +227,7 @@ function fit_sine_series(X::AbstractVector{<:Real},Y::AbstractVector{<:Real}, ba
         M[i, 1] = 1
         M[i, 2] = T[i]
         for k in 1:basis_elements
-            M[i, 2+k] = sin(k*T[i])#/k^order
+            M[i, 2+k] = sin(k*T[i])
         end
     end
     phi = M'M
@@ -234,12 +239,60 @@ function fit_sine_series(X::AbstractVector{<:Real},Y::AbstractVector{<:Real}, ba
         t = (x - lx)/(hx-lx)*pi
         s = C[1] + C[2]*t
         for k in 1:basis_elements
-            s += C[2+k]*sin(k*t)#/k^order
+            s += C[2+k]*sin(k*t)
         end
         s
     end
 end
 
+
+"""
+    lsq_denoise(S::AbstractVector{<:Real}; order::Integer=3, strength::Real = NaN)
+
+denoise a sequence S by penalising its order-th finite differences in a least squares regression
+
+    `S` : sequence.
+
+    Keyword arguments:
     
-export denoise, fit_rbf, RBF, fit_nspline, fit_sine_series
+    `order` : finite differencing order.
+    
+    `strength` : intensity of penalisation on the derivative in [0, Inf[, if unspecified it is auto-determined.
+
+return the filtered sequence.
+"""
+function lsq_denoise(S::AbstractVector{<:Real}; order::Integer=3, strength::Real = NaN)
+    D = sparse(1.0I, length(S), length(S))
+    for _ in 1:order
+        D = diff(D, dims=1)
+    end
+    C = D'D
+    smoother(t) = factorize(I + (t/(1-t))*C)\S
+    if isfinite(strength)
+        return smoother(strength/(1+strength))
+    end
+
+    X = collect(S)
+    for _ in 1:order
+        X = diff(X)
+    end
+    noise = sum(x -> x^2/length(X), X) / binomial(2*order,order)
+
+    t = 0.5
+    dt = 0.25
+    
+    while true
+        V = smoother(t)
+        pnoise = mapreduce((x,y) -> abs2(x-y)/length(V), +, V, S)
+        t += dt*sign(noise-pnoise)
+        dt /= 2
+        if abs(pnoise-noise) < 1e-5 * noise || dt < 1e-16
+            break
+        end
+    end
+
+    smoother(t)
+end
+
+export denoise, fit_rbf, RBF, fit_nspline, fit_sine_series, lsq_denoise
 end # module

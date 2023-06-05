@@ -29,20 +29,20 @@ in particular `S + N` reconstructs the original data `V`.
 ### Example
 
 ```julia
+begin
 using KissSmoothing, Statistics, LinearAlgebra
 using PyPlot
 figure(figsize=(5,4))
 for (i,s) in enumerate(2 .^ LinRange(-1.5,1.5,4))
     # generating a simple sinusoidal signal
-    X = LinRange(0,2pi,1000)
-    Y = sin.(X)
+    X = LinRange(0, pi, 1000)
+    Y = sin.(X.^2)
     # generate it's noise corrupted version
     TN = std(Y).*randn(length(X))./7 .*s
     raw_S = Y .+ TN
     # using this package function to extract signal S and noise N
     S, N = denoise(raw_S)
-
-    subplot(2,2,i)
+    subplot(2, 2, i)
     plot(X,raw_S, color="gray",lw=0.8, label="Y noisy")
     plot(X,Y,color="red",label="Y true")
     plot(X,S,color="blue", ls ="dashed",label="Y smoothed")
@@ -52,6 +52,7 @@ for (i,s) in enumerate(2 .^ LinRange(-1.5,1.5,4))
 end
 tight_layout()
 savefig("test.png")
+end
 ```
 ![test.png](test.png "Plot of 1D signal smoothing")
 
@@ -152,7 +153,7 @@ savefig("nspline.png")
 
 ## Sine Series Estimation
 
-    fit_sine_series(X::Vector, Y::Vector, basis_elements::Integer, noise=0)
+    fit_sine_series(X::Vector,Y::Vector, basis_elements::Integer; lambda = 0.0, order=3)
 
 fit Y ~ 1 + X + Σ sin(.) by minimising Σ (Y - f(x))^2 + lambda * ∫(Δ^order F)^2
 
@@ -191,3 +192,38 @@ tight_layout()
 savefig("sine_fit.png")
 ```
 ![sine_fit.png](sine_fit.png "Plot of FFT Spline estimation")
+
+
+
+## Least Squares Denoising
+
+    lsq_denoise(S::AbstractVector{<:Real}; order::Integer=3, strength::Real = NaN)
+
+denoise a sequence S by penalising its order-th finite differences in a least squares regression
+
+    `S` : sequence.
+
+    Keyword arguments:
+    
+    `order` : finite differencing order.
+    
+    `strength` : intensity of penalisation on the derivative, if unspecified it is auto-determined.
+
+return the filtered sequence.
+
+### Example
+
+```julia
+using PyPlot, KissSmoothing
+fg(x) = sin(x^2) + x
+x = collect(LinRange(0,pi,150))
+y = fg.(x) .+ randn(length(x)) .*0.1
+plot(y, color="red",lw=1.,label="noisy seq")
+plot(lsq_denoise(y,order=2), color="blue",lw=1.,label="filtered")
+xlabel("X")
+ylabel("Y")
+legend()
+tight_layout()
+savefig("lsq_denoise.png")
+```
+![lsq_denoise.png](lsq_denoise.png "Plot of LSQ Denoising")
